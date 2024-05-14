@@ -42,7 +42,7 @@
 param (
     [string] $UrlUploadDestination = "", 
     [string] $TimeIntervalInHours    = "25",
-	[string] $CaseNumber = "",
+	[string] $CaseNumber = "test123",
 
 	[Parameter()]
     [string] $UserName   = $env:USERNAME, 
@@ -59,6 +59,8 @@ if ($UrlUploadDestination -eq '') {
    Exit
 } 
 
+Write-Host "Hello?"
+
 # Qlik Sense client certificate to be used for connection authentication
 # Note, certificate lookup must return only one certificate. 
 $ClientCert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object {$_.Issuer -like "*$($CertIssuer)*"}
@@ -69,12 +71,17 @@ if (($ClientCert | measure-object).count -ne 1) {
     Exit 
 }
 
+Write-Host "We got a client cert"
+
 # 16 character Xrfkey to use for QRS API call
 $XrfKey = "hfFOdh87fD98f7sf"
 
 # calculate the date times using timeRange.
-$LogStart = (Get-Date).AddHours(-$TimeIntervalInHours)
+$LogStart = (Get-Date).AddHours(-$TimeIntervalInHours) 
 $LogEnd = Get-Date
+
+$formattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
+$formattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
 
 # HTTP headers to be used in REST API call
 $HttpHeaders = @{}
@@ -87,8 +94,12 @@ $HttpBody = @{}
 
 # GET /logexport?caseNumber={caseNumber}&start={logStart}&end={logEnd}&options={options}
 
+Write-Host "Before API call"
+
+Write-Host "What is this? https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)"
+
 # Invoke REST API call
-$Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($LogStart)&end=$($LogEnd)&xrfkey=$($xrfkey)" `
+$Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
@@ -97,10 +108,9 @@ $Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumb
 
 # Make GET call to /qrs/logexport from repository service
 
-$responseStatus = [int]$Response.StatusCode
-Write-Host $responseStatus
+Write-Host "This is the response code: $Response.StatusCode"
 # if successful
 # save zip output locally
 
-
+Exit
 # make post call to filecloud to upload zip output
