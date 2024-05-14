@@ -41,7 +41,7 @@
 
 param (
     [string] $UrlUploadDestination = "", 
-    [string] $TimeInterval    = "25hr",
+    [string] $TimeIntervalInHours    = "25",
 	[string] $CaseNumber = "",
 
 	[Parameter()]
@@ -73,7 +73,7 @@ if (($ClientCert | measure-object).count -ne 1) {
 $XrfKey = "hfFOdh87fD98f7sf"
 
 # calculate the date times using timeRange.
-$LogStart = (Get-Date).AddHours(-$TimeInterval)
+$LogStart = (Get-Date).AddHours(-$TimeIntervalInHours)
 $LogEnd = Get-Date
 
 # HTTP headers to be used in REST API call
