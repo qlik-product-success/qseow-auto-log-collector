@@ -56,6 +56,7 @@ param (
 
 if ($UrlUploadDestination -eq '') {
    Write-Error "Url Upload destination cannot be empty"
+   Exit
 } 
 
 # Qlik Sense client certificate to be used for connection authentication
