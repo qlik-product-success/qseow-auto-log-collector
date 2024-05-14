@@ -108,7 +108,7 @@ $Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumb
 
 # Make GET call to /qrs/logexport from repository service
 
-Write-Host "This is the response code: $Response.StatusCode"
+Write-Host "This is the response code: $Response"
 # if successful
 # save zip output locally
 
