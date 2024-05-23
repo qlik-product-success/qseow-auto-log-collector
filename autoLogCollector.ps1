@@ -99,16 +99,27 @@ Write-Host "Before API call"
 Write-Host "What is this? https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)"
 
 # Invoke REST API call
-$Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
+$Response = ""
+try{
+   $Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
                   -ContentType 'application/json' `
                   -Certificate $ClientCert
 
+   Write-output "Status Code -- $($Response.StatusCode)"
+   Write-Output "GET request to /logexport successful."
+} catch {
+   Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
+   Write-Output "GET request to /logexport failed. Exiting..."
+   Exit
+}
+
+
+
 # Make GET call to /qrs/logexport from repository service
 
-Write-Host "This is the response code: $Response"
 # if successful
 # save zip output locally
 
