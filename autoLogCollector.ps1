@@ -43,6 +43,7 @@ param (
     [string] $UrlUploadDestination = "", 
     [string] $TimeIntervalInHours    = "25",
 	[string] $CaseNumber = "test123",
+    [string] $LocalTempPath = "C:\Users\qsn\",
 
 	[Parameter()]
     [string] $UserName   = $env:USERNAME, 
@@ -59,8 +60,6 @@ if ($UrlUploadDestination -eq '') {
    Exit
 } 
 
-Write-Host "Hello?"
-
 # Qlik Sense client certificate to be used for connection authentication
 # Note, certificate lookup must return only one certificate. 
 $ClientCert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object {$_.Issuer -like "*$($CertIssuer)*"}
@@ -70,8 +69,6 @@ if (($ClientCert | measure-object).count -ne 1) {
     Write-Host "Failed. Could not find one unique certificate." -ForegroundColor Red
     Exit 
 }
-
-Write-Host "We got a client cert"
 
 # 16 character Xrfkey to use for QRS API call
 $XrfKey = "hfFOdh87fD98f7sf"
@@ -94,8 +91,6 @@ $HttpBody = @{}
 
 # GET /logexport?caseNumber={caseNumber}&start={logStart}&end={logEnd}&options={options}
 
-Write-Host "Before API call"
-
 Write-Host "What is this? https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)"
 
 # Invoke REST API call
@@ -114,6 +109,22 @@ try{
    Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
    Write-Output "GET request to /logexport failed. Exiting..."
    Exit
+}
+
+
+# Make the API call
+$ZipResponse = Invoke-RestMethod -Uri "https://$($FQDN)/$($Response)" `
+                  -Method GET `
+                  -Certificate $ClientCert
+
+# Check if the request was successful
+if ($ZipResponse.StatusCode -eq 200) {
+    # Save the ZIP contents locally
+    $ZipResponse.Content | Set-Content -Path $LocalTempPath -Encoding Byte
+    Write-Host "ZIP file saved successfully."
+} else {
+    Write-Host "Failed to download ZIP file. Status code: $($ZipResponse.StatusCode)"
+    Exit
 }
 
 
