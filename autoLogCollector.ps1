@@ -42,8 +42,8 @@
 param (
     [string] $UrlUploadDestination = "", 
     [string] $TimeIntervalInHours    = "25",
-	[string] $CaseNumber = "test123",
-    [string] $LocalTempPath = "C:\Users\qsn\",
+	[string] $CaseNumber = "temp123456",
+    [string] $LocalTempContentPath = "C:\ProgramData\Qlik\Sense\Repository\TempContent\",
 
 	[Parameter()]
     [string] $UserName   = $env:USERNAME, 
@@ -104,6 +104,7 @@ try{
                   -Certificate $ClientCert
 
    Write-output "Status Code -- $($Response.StatusCode)"
+   Write-output "Response: $($Response)"
    Write-Output "GET request to /logexport successful."
 } catch {
    Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
@@ -111,28 +112,13 @@ try{
    Exit
 }
 
+# file should be now found in C:\ProgramData\Qlik\Sense\Repository\TempContent\$UUID\LogCollector_$caseNumber.zip
 
-# Make the API call
-$ZipResponse = Invoke-RestMethod -Uri "https://$($FQDN)/$($Response)" `
-                  -Method GET `
-                  -Certificate $ClientCert
+$uuid = [regex]::Match($Response, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
-# Check if the request was successful
-if ($ZipResponse.StatusCode -eq 200) {
-    # Save the ZIP contents locally
-    $ZipResponse.Content | Set-Content -Path $LocalTempPath -Encoding Byte
-    Write-Host "ZIP file saved successfully."
-} else {
-    Write-Host "Failed to download ZIP file. Status code: $($ZipResponse.StatusCode)"
-    Exit
-}
+$LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
+Write-Output $LocalPathOfZip
 
-
-
-# Make GET call to /qrs/logexport from repository service
-
-# if successful
-# save zip output locally
 
 Exit
 # make post call to filecloud to upload zip output
