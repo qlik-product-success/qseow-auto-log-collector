@@ -117,11 +117,11 @@ try{
 $uuid = [regex]::Match($Response, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
-Write-Output $LocalPathOfZip
-
-Write-Output $UrlUploadDestination
 
 $FileName = "LogCollector_$CaseNumber.zip"
+
+$UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
+$UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
 
 $UploadResponse = ""
 
@@ -129,23 +129,25 @@ try{
 
    $fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
 
-   $UploadResponse = Invoke-RestMethod -Uri "$UrlUploadDestination/upload&offset=0&complete=1&filename=$($FileName)" `
-                  -Method POST `
+   $UploadResponse = Invoke-RestMethod -Uri "$UploadUrl/upload&&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" `
+                  -Method Post `
                   -Body $fileBytes `
                   -ContentType 'application/zip' 
 
-                      # Check if the request was successful (status code 200)
     if ($response.StatusCode -eq 200) {
          
         Write-Output "POST request to $($UrlUploadDestination) successful."
         Write-Output "File uploaded successfully!"
     } else {
-        Write-Output "Failed to upload file. Status code: $($response.StatusCode)"
+
+        Write-Output "Failed to upload file. Status code: $($UploadResponse.StatusCode)"
+        Write-Output "Status Code --- $($_) "
     }
 
 } catch {
 
-   Write-Host "Error occurred: $_"
+   Write-Output "Error occurred: $_"
+    Write-Output "Message --- $($_.Exception) "
    Write-Output "POST request to $($UrlUploadDestination) failed. Exiting..."
    Exit
 }
