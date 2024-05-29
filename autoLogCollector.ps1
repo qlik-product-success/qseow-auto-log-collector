@@ -112,13 +112,42 @@ try{
    Exit
 }
 
-# file should be now found in C:\ProgramData\Qlik\Sense\Repository\TempContent\$UUID\LogCollector_$caseNumber.zip
+# file should be now found in C:\ProgramData\Qlik\Sense\Repository\TempContent\$UUID\LogCollector_$CaseNumber.zip
 
 $uuid = [regex]::Match($Response, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
 Write-Output $LocalPathOfZip
 
+Write-Output $UrlUploadDestination
+
+$FileName = "LogCollector_$CaseNumber.zip"
+
+$UploadResponse = ""
+
+try{
+
+   $fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
+
+   $UploadResponse = Invoke-RestMethod -Uri "$UrlUploadDestination/upload&offset=0&complete=1&filename=$($FileName)" `
+                  -Method POST `
+                  -Body $fileBytes `
+                  -ContentType 'application/zip' 
+
+                      # Check if the request was successful (status code 200)
+    if ($response.StatusCode -eq 200) {
+         
+        Write-Output "POST request to $($UrlUploadDestination) successful."
+        Write-Output "File uploaded successfully!"
+    } else {
+        Write-Output "Failed to upload file. Status code: $($response.StatusCode)"
+    }
+
+} catch {
+
+   Write-Host "Error occurred: $_"
+   Write-Output "POST request to $($UrlUploadDestination) failed. Exiting..."
+   Exit
+}
 
 Exit
-# make post call to filecloud to upload zip output
