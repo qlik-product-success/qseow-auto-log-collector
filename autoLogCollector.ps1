@@ -125,18 +125,21 @@ $UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
 
 #$fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
 $multipartFormData = @{
-    file = Get-Item $LocalPathOfZip
+    file = Get-Item -Path $LocalPathOfZip
 }
+
+
+
+Write-Output "File Size: $($fileBytes.Length)"
 
 $FormattedUploadUrl = "$($UploadUrl)upload&appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
 
 Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
-$UploadResponse = ""
 
-try{
+$UploadResponse = try {
 
-$UploadResponse = Invoke-RestMethod -Uri $FormattedUploadUrl -Method Post -ContentType "multipart/form-data" -Verbose
+    Invoke-RestMethod -Uri $FormattedUploadUrl -Method Post -Body $multipartFormData -ContentType "multipart/form-data" -Verbose
                   
 
     if ($UploadResponse.StatusCode -eq 200) {
@@ -145,7 +148,7 @@ $UploadResponse = Invoke-RestMethod -Uri $FormattedUploadUrl -Method Post -Conte
         Write-Output "File uploaded successfully!"
     } 
 } catch {
-   $_
+   $_.Exception.Response
    Write-Output "Error occurred"
    Write-Output "Message --- $($_.ErrorDetails.Message) "
    Write-Output "POST request to $($UrlUploadDestination) failed. Exiting..."
