@@ -123,31 +123,31 @@ $FileName = "LogCollector_$CaseNumber.zip"
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
 
+#$fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
+$multipartFormData = @{
+    file = Get-Item $LocalPathOfZip
+}
+
+$FormattedUploadUrl = "$($UploadUrl)upload&appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
+
+Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
+
 $UploadResponse = ""
 
 try{
 
-   $fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
+$UploadResponse = Invoke-RestMethod -Uri $FormattedUploadUrl -Method Post -ContentType "multipart/form-data" -Verbose
+                  
 
-   $UploadResponse = Invoke-RestMethod -Uri "$UploadUrl/upload&&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" `
-                  -Method Post `
-                  -Body $fileBytes `
-                  -ContentType 'application/zip' 
-
-    if ($response.StatusCode -eq 200) {
+    if ($UploadResponse.StatusCode -eq 200) {
          
-        Write-Output "POST request to $($UrlUploadDestination) successful."
+        Write-Output "POST request to $($FormattedUploadUrl) successful."
         Write-Output "File uploaded successfully!"
-    } else {
-
-        Write-Output "Failed to upload file. Status code: $($UploadResponse.StatusCode)"
-        Write-Output "Status Code --- $($_) "
-    }
-
+    } 
 } catch {
-
-   Write-Output "Error occurred: $_"
-    Write-Output "Message --- $($_.Exception) "
+   $_
+   Write-Output "Error occurred"
+   Write-Output "Message --- $($_.ErrorDetails.Message) "
    Write-Output "POST request to $($UrlUploadDestination) failed. Exiting..."
    Exit
 }
