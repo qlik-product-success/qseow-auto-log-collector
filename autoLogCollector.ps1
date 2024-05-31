@@ -55,6 +55,9 @@ param (
     [string] $CertIssuer = [string][System.Net.Dns]::GetHostByName(($env:computerName)).Hostname
 )
 
+# Load required assemblies
+Add-Type -AssemblyName System.Net.Http
+
 if ($UrlUploadDestination -eq '') {
    Write-Error "Url Upload destination cannot be empty"
    Exit
@@ -94,17 +97,17 @@ $HttpBody = @{}
 Write-Host "What is this? https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)"
 
 # Invoke REST API call
-$Response = ""
+$GetLogsResponse = ""
 try{
-   $Response = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
+   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
                   -ContentType 'application/json' `
                   -Certificate $ClientCert
 
-   Write-output "Status Code -- $($Response.StatusCode)"
-   Write-output "Response: $($Response)"
+   Write-output "Status Code -- $($GetLogsResponse.StatusCode)"
+   Write-output "Response: $($GetLogsResponse)"
    Write-Output "GET request to /logexport successful."
 } catch {
    Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
@@ -114,7 +117,7 @@ try{
 
 # file should be now found in C:\ProgramData\Qlik\Sense\Repository\TempContent\$UUID\LogCollector_$CaseNumber.zip
 
-$uuid = [regex]::Match($Response, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
+$uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
 
@@ -124,35 +127,47 @@ $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
 
 #$fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
-$multipartFormData = @{
-    file = Get-Item -Path $LocalPathOfZip
-}
+#$multipartFormData = @{
+#    file = Get-Item -Path $LocalPathOfZip
+#}
 
-
-
-Write-Output "File Size: $($fileBytes.Length)"
 
 $FormattedUploadUrl = "$($UploadUrl)upload&appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
 
 Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
 
-$UploadResponse = try {
 
-    Invoke-RestMethod -Uri $FormattedUploadUrl -Method Post -Body $multipartFormData -ContentType "multipart/form-data" -Verbose
-                  
+# Create HttpClient object
+$client = New-Object System.Net.Http.HttpClient
 
-    if ($UploadResponse.StatusCode -eq 200) {
-         
-        Write-Output "POST request to $($FormattedUploadUrl) successful."
-        Write-Output "File uploaded successfully!"
-    } 
-} catch {
-   $_.Exception.Response
-   Write-Output "Error occurred"
-   Write-Output "Message --- $($_.ErrorDetails.Message) "
-   Write-Output "POST request to $($UrlUploadDestination) failed. Exiting..."
-   Exit
+# Create MultipartFormDataContent object
+$content = New-Object System.Net.Http.MultipartFormDataContent
+
+# Create ByteArrayContent from file bytes
+[byte[]]$arr = Get-Content $LocalPathOfZip -Encoding Byte -ReadCount 0
+Write-Output "File Bytes Length: $($arr.Length)"
+#Write-Output $arr.GetType()
+$fileContent = New-Object System.Net.Http.ByteArrayContent($arr,0,$arr.Length)
+
+# Set content disposition and media type
+$fileContent.Headers.ContentDisposition = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
+$fileContent.Headers.ContentDisposition.FileName = [System.IO.Path]::GetFileName($LocalPathOfZip)
+$fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/zip")
+
+# Add the file content to the multipart form data
+$content.Add($fileContent, "file", $FileName)
+
+# Send the POST request
+$resp = $client.PostAsync($FormattedUploadUrl, $content)
+
+# Check the response status
+if ($resp.IsSuccessStatusCode) {
+    Write-Host "File uploaded successfully!"
+} else {
+    $resp
+    Write-Host "Failed to upload file. Status code: $($resp.StatusCode)"
 }
+
 
 Exit
