@@ -89,6 +89,8 @@ $HttpHeaders.Add("X-Qlik-Xrfkey","$XrfKey")
 $HttpHeaders.Add("X-Qlik-User", "UserDirectory=$UserDomain;UserId=$UserName")
 $HttpHeaders.Add("Content-Type", "application/json")
 
+Write-Output $HttpHeaders
+
 # HTTP body for REST API call
 $HttpBody = @{}
 
@@ -132,7 +134,7 @@ $UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
 #}
 
 
-$FormattedUploadUrl = "$($UploadUrl)upload&appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
+$FormattedUploadUrl = "$($UploadUrl)upload?appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
 
 Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
@@ -155,18 +157,21 @@ $fileContent.Headers.ContentDisposition = [System.Net.Http.Headers.ContentDispos
 $fileContent.Headers.ContentDisposition.FileName = [System.IO.Path]::GetFileName($LocalPathOfZip)
 $fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/zip")
 
+Write-Output "HEADERS: "
+Write-Output $fileContent
+
 # Add the file content to the multipart form data
 $content.Add($fileContent, "file", $FileName)
 
-# Send the POST request
-$resp = $client.PostAsync($FormattedUploadUrl, $content)
+try {
+    # Send the POST request
+    $resp = $client.PostAsync($FormattedUploadUrl, $content)
 
-# Check the response status
-if ($resp.IsSuccessStatusCode) {
-    Write-Host "File uploaded successfully!"
-} else {
-    $resp
-    Write-Host "Failed to upload file. Status code: $($resp.StatusCode)"
+} catch {
+   $_
+   Write-Output "Error: $($_.Exception.Response) "
+   Write-Output "POST request failed. Exiting..."
+   Exit
 }
 
 
