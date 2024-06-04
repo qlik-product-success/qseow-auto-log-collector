@@ -116,9 +116,6 @@ try{
    Write-Output "GET request to /logexport failed. Exiting..."
    Exit
 }
-
-# file should be now found in C:\ProgramData\Qlik\Sense\Repository\TempContent\$UUID\LogCollector_$CaseNumber.zip
-
 $uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
@@ -126,53 +123,41 @@ $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).
 $FileName = "LogCollector_$CaseNumber.zip"
 
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
-$UploadPath = [regex]::Match($UrlUploadDestination, "(?<=url)\/.*$").Value
+$UploadPath = [regex]::Match($UrlUploadDestination, "(?<=mode=upload#)\/.*$").Value
 
-#$fileBytes = [System.IO.File]::ReadAllBytes($LocalPathOfZip)
-#$multipartFormData = @{
-#    file = Get-Item -Path $LocalPathOfZip
-#}
-
-
-$FormattedUploadUrl = "$($UploadUrl)upload?appname=explorer&path=$($UploadPath)&offset=0&complete=1&filename=$($FileName)" 
+$FormattedUploadUrl = "$($UploadUrl)core/upload?path=$($UploadPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
 
 Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
-
-
-# Create HttpClient object
-$client = New-Object System.Net.Http.HttpClient
-
-# Create MultipartFormDataContent object
-$content = New-Object System.Net.Http.MultipartFormDataContent
-
-# Create ByteArrayContent from file bytes
-[byte[]]$arr = Get-Content $LocalPathOfZip -Encoding Byte -ReadCount 0
-Write-Output "File Bytes Length: $($arr.Length)"
-#Write-Output $arr.GetType()
-$fileContent = New-Object System.Net.Http.ByteArrayContent($arr,0,$arr.Length)
-
-# Set content disposition and media type
-$fileContent.Headers.ContentDisposition = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
-$fileContent.Headers.ContentDisposition.FileName = [System.IO.Path]::GetFileName($LocalPathOfZip)
-$fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/zip")
-
-Write-Output "HEADERS: "
-Write-Output $fileContent
-
-# Add the file content to the multipart form data
-$content.Add($fileContent, "file", $FileName)
-
-try {
-    # Send the POST request
-    $resp = $client.PostAsync($FormattedUploadUrl, $content)
-
-} catch {
-   $_
-   Write-Output "Error: $($_.Exception.Response) "
-   Write-Output "POST request failed. Exiting..."
-   Exit
+#$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+#$headers.Add("Content-Type", "multipart/form-data")
+$headers = @{
+    'Content-Type' = 'multipart/form-data'
 }
 
+$multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
+$multipartFile = $LocalPathOfZip
+$FileStream = [System.IO.FileStream]::new($multipartFile, [System.IO.FileMode]::Open)
+$fileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
+$fileHeader.Name = "filedata"
+$fileHeader.FileName = $FileName
+$fileContent = [System.Net.Http.StreamContent]::new($FileStream)
+$fileContent.Headers.ContentDisposition = $fileHeader
+$multipartContent.Add($fileContent)
+
+
+$body = $multipartContent
+
+try {
+    $response = Invoke-RestMethod -Method 'Post' -Uri $FormattedUploadUrl -Headers $headers -Body $body
+    $response | ConvertTo-Json
+
+    Write-Output $response
+} catch {
+    Write-Output "Status Code --- $($_.Exception) "
+}
+$response | ConvertTo-Json
+
+Write-Output $response
 
 Exit
