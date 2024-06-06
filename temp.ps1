@@ -25,3 +25,5 @@ $response | ConvertTo-Json
 }
 $FileStream.Close()
 Exit
+
+#.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/ui/core/index.html?mode=upload#/SHARED/%21UBQFBx7wFdQ2OoMnV/javEIJYoP6KL35Tt"
