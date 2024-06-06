@@ -89,8 +89,6 @@ $HttpHeaders.Add("X-Qlik-Xrfkey","$XrfKey")
 $HttpHeaders.Add("X-Qlik-User", "UserDirectory=$UserDomain;UserId=$UserName")
 $HttpHeaders.Add("Content-Type", "application/json")
 
-Write-Output $HttpHeaders
-
 # HTTP body for REST API call
 $HttpBody = @{}
 
@@ -120,12 +118,22 @@ $uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
 
+Write-Output $LocalPathOfZip
+
 $FileName = "LogCollector_$CaseNumber.zip"
 
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
-$UploadPath = [regex]::Match($UrlUploadDestination, "(?<=mode=upload#)\/.*$").Value
+$UploadPath = ($UrlUploadDestination -split "#")[1]
 
-$FormattedUploadUrl = "$($UploadUrl)core/upload?path=$($UploadPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
+Write-Output $pathSegments 
+
+$encodedPath = $UploadPath -replace "/", "%2F"
+
+Write-Output  "OG upload URL: $($UploadUrl)"
+Write-Output  "Upload Path before: $($UploadPath)"
+Write-Output  "encoded upload URL: $($encodedPath)"
+
+$FormattedUploadUrl = "$($UploadUrl)upload?path=$($encodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
 
 Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
@@ -145,8 +153,9 @@ $fileContent = [System.Net.Http.StreamContent]::new($FileStream)
 $fileContent.Headers.ContentDisposition = $fileHeader
 $multipartContent.Add($fileContent)
 
-
 $body = $multipartContent
+
+#make sure to add a timestamp to the filename because they will be overwritten when uploaded 
 
 try {
     $response = Invoke-RestMethod -Method 'Post' -Uri $FormattedUploadUrl -Headers $headers -Body $body
@@ -154,9 +163,9 @@ try {
 
     Write-Output $response
 } catch {
-    Write-Output "Status Code --- $($_.Exception) "
+    Write-Output "Error --- $($_.Exception.Response.Message) "
+    Write-Output "Error --- $($_.Exception.Message) "
 }
-$response | ConvertTo-Json
 
 Write-Output $response
 
