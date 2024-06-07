@@ -92,10 +92,6 @@ $HttpHeaders.Add("Content-Type", "application/json")
 # HTTP body for REST API call
 $HttpBody = @{}
 
-# GET /logexport?caseNumber={caseNumber}&start={logStart}&end={logEnd}&options={options}
-
-Write-Host "What is this? https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)"
-
 # Invoke REST API call
 $GetLogsResponse = ""
 try{
@@ -116,8 +112,6 @@ try{
 }
 
 
-
-
 $uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
@@ -131,45 +125,7 @@ $UploadPath = ($UrlUploadDestination -split "#")[1]
 
 $encodedPath = $UploadPath -replace "/", "%2F"
 
-Write-Output  "OG upload URL: $($UploadUrl)"
-Write-Output  "Upload Path before: $($UploadPath)"
-Write-Output  "encoded upload URL: $($encodedPath)"
-
 $FormattedUploadUrl = "$($UploadUrl)upload?path=$($encodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
-
-Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
-
-#$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
-#$headers.Add("Content-Type", "multipart/form-data")
-# $headers = @{
-#     'Content-Type' = 'multipart/form-data'
-# }
-
-# $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
-# $multipartFile = $LocalPathOfZip
-# $FileStream = [System.IO.FileStream]::new($multipartFile, [System.IO.FileMode]::Open)
-# $fileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
-# $fileHeader.Name = "filedata"
-# $fileHeader.FileName = $FileName
-# $fileContent = [System.Net.Http.StreamContent]::new($FileStream)
-# $fileContent.Headers.ContentDisposition = $fileHeader
-# $multipartContent.Add($fileContent)
-
-# $body = $multipartContent
-
-# #make sure to add a timestamp to the filename because they will be overwritten when uploaded 
-
-# try {
-#     $response = Invoke-RestMethod -Method 'Post' -Uri $FormattedUploadUrl -Headers $headers -Body $body
-#     $response | ConvertTo-Json
-
-#     Write-Output $response
-# } catch {
-#     Write-Output "Error --- $($_.Exception.Response.Message) "
-#     Write-Output "Error --- $($_.Exception.Message) "
-# }
-
-# Write-Output $response
 
 $fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
 
@@ -183,17 +139,19 @@ $form = New-Object System.Net.Http.MultipartFormDataContent
 
 $form.Add($f1, 'file', $FileName)
 
+Write-Output  "Attempting upload to : $($FormattedUploadUrl)"
 try{
     $rsp = $client.PostAsync($FormattedUploadUrl, $form).Result
-    $rsp.IsSuccessStatusCode # false if 303
-    $rsp.StatusCode -eq 303 # true if 303
+    if ($rsp.IsSuccessStatusCode) {
+     Write-Output "Success uploading to Filecloud"
+    }  
 }
 catch {
-    Write-Output "Error in Upload to Filecloud"
+    Write-Output "Error uploading to Filecloud"
     Write-Output "Error --- $($_.Exception.Response.Message) "
     Write-Output "Error --- $($_.Exception.Message) "
-
 }
+
 $fs.Close(); $fs.Dispose()
 
 Exit
