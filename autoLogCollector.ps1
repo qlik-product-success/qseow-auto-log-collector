@@ -114,18 +114,20 @@ try{
    Write-Output "GET request to /logexport failed. Exiting..."
    Exit
 }
+
+
+
+
 $uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
 
 $LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
 
-Write-Output $LocalPathOfZip
+Write-Output "Local Path of ZIP file: $($LocalPathOfZip)"
 
 $FileName = "LogCollector_$CaseNumber.zip"
 
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($UrlUploadDestination -split "#")[1]
-
-Write-Output $pathSegments 
 
 $encodedPath = $UploadPath -replace "/", "%2F"
 
@@ -139,34 +141,59 @@ Write-Output  "UPLOAD URL: $($FormattedUploadUrl)"
 
 #$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 #$headers.Add("Content-Type", "multipart/form-data")
-$headers = @{
-    'Content-Type' = 'multipart/form-data'
+# $headers = @{
+#     'Content-Type' = 'multipart/form-data'
+# }
+
+# $multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
+# $multipartFile = $LocalPathOfZip
+# $FileStream = [System.IO.FileStream]::new($multipartFile, [System.IO.FileMode]::Open)
+# $fileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
+# $fileHeader.Name = "filedata"
+# $fileHeader.FileName = $FileName
+# $fileContent = [System.Net.Http.StreamContent]::new($FileStream)
+# $fileContent.Headers.ContentDisposition = $fileHeader
+# $multipartContent.Add($fileContent)
+
+# $body = $multipartContent
+
+# #make sure to add a timestamp to the filename because they will be overwritten when uploaded 
+
+# try {
+#     $response = Invoke-RestMethod -Method 'Post' -Uri $FormattedUploadUrl -Headers $headers -Body $body
+#     $response | ConvertTo-Json
+
+#     Write-Output $response
+# } catch {
+#     Write-Output "Error --- $($_.Exception.Response.Message) "
+#     Write-Output "Error --- $($_.Exception.Message) "
+# }
+
+# Write-Output $response
+
+$fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
+
+$f1 = New-Object System.Net.Http.StreamContent $fs
+
+$handler = New-Object System.Net.Http.HttpClientHandler
+$handler.AllowAutoRedirect = $false # Don't follow after post redirect code 303
+$client = New-Object System.Net.Http.HttpClient -ArgumentList $handler
+$client.DefaultRequestHeaders.ConnectionClose = $true # Disable keep alive, get a 200 response rather than 303
+$form = New-Object System.Net.Http.MultipartFormDataContent
+
+$form.Add($f1, 'file', $FileName)
+
+try{
+    $rsp = $client.PostAsync($FormattedUploadUrl, $form).Result
+    $rsp.IsSuccessStatusCode # false if 303
+    $rsp.StatusCode -eq 303 # true if 303
 }
-
-$multipartContent = [System.Net.Http.MultipartFormDataContent]::new()
-$multipartFile = $LocalPathOfZip
-$FileStream = [System.IO.FileStream]::new($multipartFile, [System.IO.FileMode]::Open)
-$fileHeader = [System.Net.Http.Headers.ContentDispositionHeaderValue]::new("form-data")
-$fileHeader.Name = "filedata"
-$fileHeader.FileName = $FileName
-$fileContent = [System.Net.Http.StreamContent]::new($FileStream)
-$fileContent.Headers.ContentDisposition = $fileHeader
-$multipartContent.Add($fileContent)
-
-$body = $multipartContent
-
-#make sure to add a timestamp to the filename because they will be overwritten when uploaded 
-
-try {
-    $response = Invoke-RestMethod -Method 'Post' -Uri $FormattedUploadUrl -Headers $headers -Body $body
-    $response | ConvertTo-Json
-
-    Write-Output $response
-} catch {
+catch {
+    Write-Output "Error in Upload to Filecloud"
     Write-Output "Error --- $($_.Exception.Response.Message) "
     Write-Output "Error --- $($_.Exception.Message) "
-}
 
-Write-Output $response
+}
+$fs.Close(); $fs.Dispose()
 
 Exit
