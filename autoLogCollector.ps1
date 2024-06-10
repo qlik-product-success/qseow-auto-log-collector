@@ -71,14 +71,28 @@ param (
 # Load required assemblies
 Add-Type -AssemblyName System.Net.Http
 
+# Validate that UrlUploadDestination is not empty
 if ($UrlUploadDestination -eq '') {
    Write-Error "Url Upload destination cannot be empty."
    Exit
 } 
 
+# Validate UrlUploadDestination Authority
+if !($UrlUploadDestination -contains "https://files.qlik.com/") { 
+    Write-Error "Error: Invalid UrlUploadDestination."
+    Exit
+}
+
+# Validate that CaseNumber is not empty
 if ($CaseNumber -eq '') {
    Write-Error "Case Number cannot be empty."
    Exit
+} 
+
+# Check if CaseNumber is not numeric
+if !($CaseNumber -match "^\d+$") {
+    Write-Error "Invalid Case Number."
+    Exit
 } 
 
 $ClientCert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object {$_.Issuer -like "*$($CertIssuer)*"}
@@ -155,6 +169,9 @@ try{
     Write-Output "Error --- $($_.Exception.Response.Message) "
     Write-Output "Error --- $($_.Exception.Message) "
 }
+
+# look at logging execution result to txt file, for reference over time
+
 
 $Fs.Close(); $Fs.Dispose()
 
