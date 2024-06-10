@@ -78,7 +78,7 @@ if ($UrlUploadDestination -eq '') {
 } 
 
 # Validate UrlUploadDestination Authority
-if !($UrlUploadDestination -contains "https://files.qlik.com/") { 
+if (!($UrlUploadDestination -like "https://files.qlik.com/*")) { 
     Write-Error "Error: Invalid UrlUploadDestination."
     Exit
 }
@@ -90,7 +90,7 @@ if ($CaseNumber -eq '') {
 } 
 
 # Check if CaseNumber is not numeric
-if !($CaseNumber -match "^\d+$") {
+if (!($CaseNumber -match "^\d+$")) {
     Write-Error "Invalid Case Number."
     Exit
 } 
