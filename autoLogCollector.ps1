@@ -81,39 +81,32 @@ if ($CaseNumber -eq '') {
    Exit
 } 
 
-# Qlik Sense client certificate to be used for connection authentication
-# Note, certificate lookup must return only one certificate. 
 $ClientCert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object {$_.Issuer -like "*$($CertIssuer)*"}
 
-# Only continue if one unique client cert was found 
 if (($ClientCert | measure-object).count -ne 1) { 
     Write-Host "Failed. Could not find one unique certificate." -ForegroundColor Red
     Exit 
 }
 
-# 16 character Xrfkey to use for QRS API call
 $XrfKey = "hfFOdh87fD98f7sf"
 
-# calculate the date times using timeRange.
 $LogStart = (Get-Date).AddHours(-$TimeRangeInHours) 
 $LogEnd = Get-Date
 
 $FormattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
 $FormattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
 
-# HTTP headers to be used in REST API call
 $HttpHeaders = @{}
 $HttpHeaders.Add("X-Qlik-Xrfkey","$XrfKey")
 $HttpHeaders.Add("X-Qlik-User", "UserDirectory=$UserDomain;UserId=$UserName")
 $HttpHeaders.Add("Content-Type", "application/json")
 
-# HTTP body for REST API call
 $HttpBody = @{}
 
-# Invoke REST API call
+# Invoke REST API call to QRS
 $GetLogsResponse = ""
 try{
-   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($xrfkey)" `
+   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($XrfKey)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
@@ -129,42 +122,35 @@ try{
    Exit
 }
 
-
-$uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
-
-$LocalPathOfZip = "$($LocalTempContentPath)$($uuid)\LogCollector_$($CaseNumber).zip"
-
-Write-Output "Local Path of ZIP file: $($LocalPathOfZip)"
+$Uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
+$LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\LogCollector_$($CaseNumber).zip"
 
 $FileName = "LogCollector_$CaseNumber.zip"
 
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($UrlUploadDestination -split "#")[1]
-
 $EncodedPath = $UploadPath -replace "/", "%2F"
-
 $FormattedUploadUrl = "$($UploadUrl)upload?path=$($EncodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
 
 $Fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
-
 $FileContent = New-Object System.Net.Http.StreamContent $Fs
 
 $Handler = New-Object System.Net.Http.HttpClientHandler
-$Handler.AllowAutoRedirect = $false # Don't follow after post redirect code 303
+$Handler.AllowAutoRedirect = $false 
 $Client = New-Object System.Net.Http.HttpClient -ArgumentList $Handler
-$Client.DefaultRequestHeaders.ConnectionClose = $true # Disable keep alive, get a 200 response rather than 303
+$Client.DefaultRequestHeaders.ConnectionClose = $true 
 $Form = New-Object System.Net.Http.MultipartFormDataContent
 
 $Form.Add($FileContent, 'file', $FileName)
 
 Write-Output  "Attempting upload to : $($FormattedUploadUrl)"
+
 try{
-    $rsp = $Client.PostAsync($FormattedUploadUrl, $Form).Result
-    if ($rsp.IsSuccessStatusCode) {
+    $Rsp = $Client.PostAsync($FormattedUploadUrl, $Form).Result
+    if ($Rsp.IsSuccessStatusCode) {
         Write-Output "Success uploading to Filecloud"
     }  
-}
-catch {
+} catch {
     Write-Output "Error uploading to Filecloud"
     Write-Output "Error --- $($_.Exception.Response.Message) "
     Write-Output "Error --- $($_.Exception.Message) "
