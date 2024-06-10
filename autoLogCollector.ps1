@@ -128,7 +128,6 @@ try{
                   -Certificate $ClientCert
 
    Write-output "Status Code -- $($GetLogsResponse.StatusCode)"
-   Write-output "Response: $($GetLogsResponse)"
    Write-Output "GET request to /logexport successful."
 } catch {
    Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
