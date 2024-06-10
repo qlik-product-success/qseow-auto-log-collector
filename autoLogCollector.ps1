@@ -46,7 +46,7 @@
     The case number found in Salesforce. Value cannot be empty.
 
 .PARAMETER LocalTempContentPath
-    The path to which 
+    The path to which QRS outputs the logs after collecting them. Default value is "C:\ProgramData\Qlik\Sense\Repository\TempContent\".
 
 #>
 
@@ -98,8 +98,8 @@ $XrfKey = "hfFOdh87fD98f7sf"
 $LogStart = (Get-Date).AddHours(-$TimeRangeInHours) 
 $LogEnd = Get-Date
 
-$formattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
-$formattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
+$FormattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
+$FormattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
 
 # HTTP headers to be used in REST API call
 $HttpHeaders = @{}
@@ -113,7 +113,7 @@ $HttpBody = @{}
 # Invoke REST API call
 $GetLogsResponse = ""
 try{
-   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($formattedStart)&end=$($formattedEnd)&xrfkey=$($xrfkey)" `
+   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($xrfkey)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
@@ -141,27 +141,27 @@ $FileName = "LogCollector_$CaseNumber.zip"
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($UrlUploadDestination -split "#")[1]
 
-$encodedPath = $UploadPath -replace "/", "%2F"
+$EncodedPath = $UploadPath -replace "/", "%2F"
 
-$FormattedUploadUrl = "$($UploadUrl)upload?path=$($encodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
+$FormattedUploadUrl = "$($UploadUrl)upload?path=$($EncodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
 
-$fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
+$Fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
 
-$f1 = New-Object System.Net.Http.StreamContent $fs
+$FileContent = New-Object System.Net.Http.StreamContent $Fs
 
-$handler = New-Object System.Net.Http.HttpClientHandler
-$handler.AllowAutoRedirect = $false # Don't follow after post redirect code 303
-$client = New-Object System.Net.Http.HttpClient -ArgumentList $handler
-$client.DefaultRequestHeaders.ConnectionClose = $true # Disable keep alive, get a 200 response rather than 303
-$form = New-Object System.Net.Http.MultipartFormDataContent
+$Handler = New-Object System.Net.Http.HttpClientHandler
+$Handler.AllowAutoRedirect = $false # Don't follow after post redirect code 303
+$Client = New-Object System.Net.Http.HttpClient -ArgumentList $Handler
+$Client.DefaultRequestHeaders.ConnectionClose = $true # Disable keep alive, get a 200 response rather than 303
+$Form = New-Object System.Net.Http.MultipartFormDataContent
 
-$form.Add($f1, 'file', $FileName)
+$Form.Add($FileContent, 'file', $FileName)
 
 Write-Output  "Attempting upload to : $($FormattedUploadUrl)"
 try{
-    $rsp = $client.PostAsync($FormattedUploadUrl, $form).Result
+    $rsp = $Client.PostAsync($FormattedUploadUrl, $Form).Result
     if ($rsp.IsSuccessStatusCode) {
-     Write-Output "Success uploading to Filecloud"
+        Write-Output "Success uploading to Filecloud"
     }  
 }
 catch {
@@ -170,6 +170,6 @@ catch {
     Write-Output "Error --- $($_.Exception.Message) "
 }
 
-$fs.Close(); $fs.Dispose()
+$Fs.Close(); $Fs.Dispose()
 
 Exit
