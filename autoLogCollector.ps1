@@ -53,10 +53,10 @@
 #Requires -RunAsAdministrator
 
 param (
-    [string] $UrlUploadDestination = "", 
-    [string] $TimeRangeInHours    = "25",
-	[string] $CaseNumber = "",
-    [string] $LocalTempContentPath = "C:\ProgramData\Qlik\Sense\Repository\TempContent\",
+    [string] $UrlUploadDestination  = "", 
+    [string] $TimeRangeInHours      = "25",
+	[string] $CaseNumber            = "",
+    [string] $LocalTempContentPath  = "C:\ProgramData\Qlik\Sense\Repository\TempContent\",
 
 	[Parameter()]
     [string] $UserName   = $env:USERNAME, 
@@ -73,25 +73,25 @@ Add-Type -AssemblyName System.Net.Http
 
 # Validate that UrlUploadDestination is not empty
 if ($UrlUploadDestination -eq '') {
-   Write-Error "Url Upload destination cannot be empty."
+   Write-Output "Url Upload destination cannot be empty." -ForegroundColor Red
    Exit
 } 
 
 # Validate UrlUploadDestination Authority
 if (!($UrlUploadDestination -like "https://files.qlik.com/*")) { 
-    Write-Error "Error: Invalid UrlUploadDestination."
+    Write-Output "Error: Invalid UrlUploadDestination." -ForegroundColor Red
     Exit
 }
 
 # Validate that CaseNumber is not empty
 if ($CaseNumber -eq '') {
-   Write-Error "Case Number cannot be empty."
+   Write-Output "Case Number cannot be empty." -ForegroundColor Red
    Exit
 } 
 
 # Check if CaseNumber is not numeric
 if (!($CaseNumber -match "^\d+$")) {
-    Write-Error "Invalid Case Number."
+    Write-Output "Invalid Case Number." -ForegroundColor Red
     Exit
 } 
 
@@ -127,11 +127,11 @@ try{
                   -ContentType 'application/json' `
                   -Certificate $ClientCert
 
-   Write-output "Status Code -- $($GetLogsResponse.StatusCode)"
+   Write-Ouput "Status Code -- $($GetLogsResponse.StatusCode)"
    Write-Output "GET request to /logexport successful."
 } catch {
-   Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) "
-   Write-Output "GET request to /logexport failed. Exiting..."
+   Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) " -ForegroundColor Red
+   Write-Output "GET request to /logexport failed. Exiting..." -ForegroundColor Red
    Exit
 }
 
@@ -164,9 +164,9 @@ try{
         Write-Output "Success uploading to Filecloud"
     }  
 } catch {
-    Write-Output "Error uploading to Filecloud"
-    Write-Output "Error --- $($_.Exception.Response.Message) "
-    Write-Output "Error --- $($_.Exception.Message) "
+    Write-Output "Error uploading to Filecloud" -ForegroundColor Red
+    Write-Output "Error --- $($_.Exception.Response.Message) " -ForegroundColor Red
+    Write-Output "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
 }
 
 # look at logging execution result to txt file, for reference over time
