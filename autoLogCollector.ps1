@@ -71,6 +71,8 @@ param (
 # Load required assemblies
 Add-Type -AssemblyName System.Net.Http
 
+
+#Part 1: Validation
 # Validate that UrlUploadDestination is not empty
 if ($UrlUploadDestination -eq '') {
    Write-Output "Url Upload destination cannot be empty." -ForegroundColor Red
@@ -102,6 +104,14 @@ if (($ClientCert | measure-object).count -ne 1) {
     Exit 
 }
 
+
+#Part 2: Redirect URL retrieval
+
+#https://files.qlik.com/url/qahacjvapgdfwuw6
+
+
+
+#Part 3: Log Retrieval
 $XrfKey = "hfFOdh87fD98f7sf"
 
 $LogStart = (Get-Date).AddHours(-$TimeRangeInHours) 
@@ -140,6 +150,8 @@ $LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\LogCollector_$($CaseNumber).
 
 $FileName = "LogCollector_$CaseNumber.zip"
 
+
+#Part 4: Log Upload
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($UrlUploadDestination -split "#")[1]
 $EncodedPath = $UploadPath -replace "/", "%2F"
@@ -169,9 +181,9 @@ try{
     Write-Output "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
 }
 
-# look at logging execution result to txt file, for reference over time
-
-
 $Fs.Close(); $Fs.Dispose()
+
+#Part 5: Log upload result
+
 
 Exit
