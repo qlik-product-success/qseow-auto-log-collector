@@ -75,25 +75,25 @@ Add-Type -AssemblyName System.Net.Http
 #Part 1: Validation
 # Validate that UrlUploadDestination is not empty
 if ($UrlUploadDestination -eq '') {
-   Write-Output "Url Upload destination cannot be empty." -ForegroundColor Red
+   Write-Host "Url Upload destination cannot be empty." -ForegroundColor Red
    Exit
 } 
 
 # Validate UrlUploadDestination Authority
 if (!($UrlUploadDestination -like "https://files.qlik.com/*")) { 
-    Write-Output "Error: Invalid UrlUploadDestination." -ForegroundColor Red
+    Write-Host "Error: Invalid UrlUploadDestination." -ForegroundColor Red
     Exit
 }
 
 # Validate that CaseNumber is not empty
 if ($CaseNumber -eq '') {
-   Write-Output "Case Number cannot be empty." -ForegroundColor Red
+   Write-Host "Case Number cannot be empty." -ForegroundColor Red
    Exit
 } 
 
 # Check if CaseNumber is not numeric
 if (!($CaseNumber -match "^\d+$")) {
-    Write-Output "Invalid Case Number." -ForegroundColor Red
+    Write-Host "Invalid Case Number." -ForegroundColor Red
     Exit
 } 
 
@@ -106,10 +106,22 @@ if (($ClientCert | measure-object).count -ne 1) {
 
 
 #Part 2: Redirect URL retrieval
+$GetUploadUrlResponse = ""
 
-#https://files.qlik.com/url/qahacjvapgdfwuw6
+Write-Host "Getting Upload URL from: $($UrlUploadDestination)"
 
+try{
+   $GetUploadUrlResponse = Invoke-WebRequest -Uri $UrlUploadDestination -Method GET -MaximumRedirection 0 -ErrorAction SilentlyContinue
 
+   Write-Host "Response Status: $($GetUploadUrlResponse.StatusCode)"
+} catch {
+   $_
+   Write-Host "Status Code --- $($_.Exception.Response.StatusCode.Value__) " -ForegroundColor Red
+   Write-Host "GET request to get Upload URL failed. Exiting..." -ForegroundColor Red
+   Exit
+}
+
+$RedirectedUploadLocation = $GetUploadUrlResponse.Headers.Location
 
 #Part 3: Log Retrieval
 $XrfKey = "hfFOdh87fD98f7sf"
@@ -129,6 +141,7 @@ $HttpBody = @{}
 
 # Invoke REST API call to QRS
 $GetLogsResponse = ""
+Write-Host "Collecting Logs from QRS"
 try{
    $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($XrfKey)" `
                   -Method GET `
@@ -137,11 +150,12 @@ try{
                   -ContentType 'application/json' `
                   -Certificate $ClientCert
 
-   Write-Ouput "Status Code -- $($GetLogsResponse.StatusCode)"
-   Write-Output "GET request to /logexport successful."
+   Write-Host "Status Code -- $($GetLogsResponse.StatusCode)"
+   Write-Host "GET request to /logexport successful."
 } catch {
-   Write-Output "Status Code --- $($_.Exception.Response.StatusCode.Value__) " -ForegroundColor Red
-   Write-Output "GET request to /logexport failed. Exiting..." -ForegroundColor Red
+   $_
+   Write-Host "Status Code --- $($_.Exception.Response.StatusCode.Value__) " -ForegroundColor Red
+   Write-Host "GET request to /logexport failed. Exiting..." -ForegroundColor Red
    Exit
 }
 
@@ -150,10 +164,9 @@ $LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\LogCollector_$($CaseNumber).
 
 $FileName = "LogCollector_$CaseNumber.zip"
 
-
 #Part 4: Log Upload
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
-$UploadPath = ($UrlUploadDestination -split "#")[1]
+$UploadPath = ($RedirectedUploadLocation -split "#")[1]
 $EncodedPath = $UploadPath -replace "/", "%2F"
 $FormattedUploadUrl = "$($UploadUrl)upload?path=$($EncodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
 
@@ -168,22 +181,22 @@ $Form = New-Object System.Net.Http.MultipartFormDataContent
 
 $Form.Add($FileContent, 'file', $FileName)
 
-Write-Output  "Attempting upload to : $($FormattedUploadUrl)"
-
+Write-Host  "Attempting upload to : $($FormattedUploadUrl)"
 try{
     $Rsp = $Client.PostAsync($FormattedUploadUrl, $Form).Result
     if ($Rsp.IsSuccessStatusCode) {
         Write-Output "Success uploading to Filecloud"
     }  
 } catch {
-    Write-Output "Error uploading to Filecloud" -ForegroundColor Red
-    Write-Output "Error --- $($_.Exception.Response.Message) " -ForegroundColor Red
-    Write-Output "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
+    Write-Host "Error uploading to Filecloud" -ForegroundColor Red
+    Write-Host "Error --- $($_.Exception.Response.Message) " -ForegroundColor Red
+    Write-Host "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
 }
 
 $Fs.Close(); $Fs.Dispose()
 
 #Part 5: Log upload result
+
 
 
 Exit
