@@ -113,7 +113,7 @@ Write-Host "Getting Upload URL from: $($UrlUploadDestination)"
 try{
    $GetUploadUrlResponse = Invoke-WebRequest -Uri $UrlUploadDestination -Method GET -MaximumRedirection 0 -ErrorAction SilentlyContinue
 
-   Write-Host "Response Status: $($GetUploadUrlResponse.StatusCode)"
+   Write-Host "GetUploadUrlResponse Status: $($GetUploadUrlResponse.StatusCode)"
 } catch {
    $_
    Write-Host "Status Code --- $($_.Exception.Response.StatusCode.Value__) " -ForegroundColor Red
@@ -140,8 +140,8 @@ $HttpHeaders.Add("Content-Type", "application/json")
 $HttpBody = @{}
 
 # Invoke REST API call to QRS
-$GetLogsResponse = ""
 Write-Host "Collecting Logs from QRS"
+$GetLogsResponse = ""
 try{
    $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($XrfKey)" `
                   -Method GET `
@@ -149,8 +149,6 @@ try{
                   -Body $HttpBody `
                   -ContentType 'application/json' `
                   -Certificate $ClientCert
-
-   Write-Host "Status Code -- $($GetLogsResponse.StatusCode)"
    Write-Host "GET request to /logexport successful."
 } catch {
    $_
@@ -160,15 +158,17 @@ try{
 }
 
 $Uuid = [regex]::Match($GetLogsResponse, "(?<=/tempcontent/)[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}").Value
-$LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\LogCollector_$($CaseNumber).zip"
-
 $FileName = "LogCollector_$CaseNumber.zip"
+$LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\$($FileName)"
 
 #Part 4: Log Upload
+$CurrentDateTime = Get-Date -Format "yyyy-MM-dd_HHmmss"
+$UpdatedFileName = "LogCollector_$($CaseNumber)_$($CurrentDateTime).zip"
+
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($RedirectedUploadLocation -split "#")[1]
 $EncodedPath = $UploadPath -replace "/", "%2F"
-$FormattedUploadUrl = "$($UploadUrl)upload?path=$($EncodedPath)&appname=explorer&filename=$($FileName)&complete=1&offset=0&uploadpath=" 
+$FormattedUploadUrl = "$($UploadUrl)upload?path=$($EncodedPath)&appname=explorer&filename=$($UpdatedFileName)&complete=1&offset=0&uploadpath=" 
 
 $Fs = [System.IO.FileStream]::New($LocalPathOfZip, [System.IO.FileMode]::Open)
 $FileContent = New-Object System.Net.Http.StreamContent $Fs
@@ -179,7 +179,7 @@ $Client = New-Object System.Net.Http.HttpClient -ArgumentList $Handler
 $Client.DefaultRequestHeaders.ConnectionClose = $true 
 $Form = New-Object System.Net.Http.MultipartFormDataContent
 
-$Form.Add($FileContent, 'file', $FileName)
+$Form.Add($FileContent, 'file', $UpdatedFileName)
 
 Write-Host  "Attempting upload to : $($FormattedUploadUrl)"
 try{
@@ -191,6 +191,7 @@ try{
     Write-Host "Error uploading to Filecloud" -ForegroundColor Red
     Write-Host "Error --- $($_.Exception.Response.Message) " -ForegroundColor Red
     Write-Host "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
+    Exit
 }
 
 $Fs.Close(); $Fs.Dispose()

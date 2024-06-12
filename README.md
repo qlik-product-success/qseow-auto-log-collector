@@ -20,7 +20,5 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
 
 ## Command to Run the script:
 ```
-.\autoLogCollector.ps1 -UrlUploadDestination "
-https://files.qlik.com/ui/core/index.html?mode=upload#/SHARED/%21UBQFBx7wFdQ2OoMnV/javEIJYoP6KL35Tt"
--CaseNumber "00168341"
+.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341"
 ```
