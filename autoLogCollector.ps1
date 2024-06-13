@@ -47,7 +47,12 @@
 
 .PARAMETER LocalTempContentPath
     The path to which QRS outputs the logs after collecting them. Default value is "C:\ProgramData\Qlik\Sense\Repository\TempContent\".
-
+.PARAMETER Options
+    Additional Folders to gather upon log collection. Must be a comma separated value ie.options: eventlog,systeminfo,scriptlogs,allfolders
+    To include Windows event logs: eventlog
+    To include system information: systeminfo
+    To include scriptlog files from Qlik folders: scriptlogs
+    To ignore log-folder filter and export all: allfolders
 #>
 
 #Requires -RunAsAdministrator
@@ -57,6 +62,7 @@ param (
     [string] $TimeRangeInHours      = "25",
 	[string] $CaseNumber            = "",
     [string] $LocalTempContentPath  = "C:\ProgramData\Qlik\Sense\Repository\TempContent\",
+    [string] $Options               = "",
 
 	[Parameter()]
     [string] $UserName   = $env:USERNAME, 
@@ -95,7 +101,24 @@ if ($CaseNumber -eq '') {
 if (!($CaseNumber -match "^\d+$")) {
     Write-Host "Invalid Case Number." -ForegroundColor Red
     Exit
-} 
+}
+
+
+$ValidOptions = "eventlog", "systeminfo", "scriptlogs", "allfolders"
+
+if(!($Options -eq "")) {
+    # Split the input value into an array
+    $InputArray = $Options -split ","
+
+    # Check if each value in the array exists in the valid options
+    $IsValid = $InputArray | ForEach-Object { $ValidOptions -contains $_ }
+
+    # Check if all values are valid
+    if ($IsValid -contains $false) {
+        Write-Host "Invalid Options param." -ForegroundColor Red
+        Exit
+    }
+}
 
 $ClientCert = Get-ChildItem -Path "Cert:\CurrentUser\My" | Where-Object {$_.Issuer -like "*$($CertIssuer)*"}
 
@@ -129,8 +152,8 @@ $XrfKey = "hfFOdh87fD98f7sf"
 $LogStart = (Get-Date).AddHours(-$TimeRangeInHours) 
 $LogEnd = Get-Date
 
-$FormattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
-$FormattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'00:00:00.000'Z'"
+$FormattedStart = Get-Date $LogStart -Format "yyyy-MM-dd'T'HH:mm:ss.000'Z'"
+$FormattedEnd = Get-Date $LogEnd -Format "yyyy-MM-dd'T'HH:mm:ss.000'Z'"
 
 $HttpHeaders = @{}
 $HttpHeaders.Add("X-Qlik-Xrfkey","$XrfKey")
@@ -143,7 +166,7 @@ $HttpBody = @{}
 Write-Host "Collecting Logs from QRS"
 $GetLogsResponse = ""
 try{
-   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($XrfKey)" `
+   $GetLogsResponse = Invoke-RestMethod -Uri "https://$($FQDN):4242/qrs/logexport?caseNumber=$($CaseNumber)&start=$($FormattedStart)&end=$($FormattedEnd)&xrfkey=$($XrfKey)&options=$($Options)" `
                   -Method GET `
                   -Headers $HttpHeaders  `
                   -Body $HttpBody `
@@ -162,8 +185,9 @@ $FileName = "LogCollector_$CaseNumber.zip"
 $LocalPathOfZip = "$($LocalTempContentPath)$($Uuid)\$($FileName)"
 
 #Part 4: Log Upload
-$CurrentDateTime = Get-Date -Format "yyyy-MM-dd_HHmmss"
-$UpdatedFileName = "LogCollector_$($CaseNumber)_$($CurrentDateTime).zip"
+$CollectedStartDate = Get-Date $LogStart -Format "yyyy-MM-dd-HHmmss"
+$CollectedEndDate = Get-Date $LogEnd -Format "yyyy-MM-dd-HHmmss"
+$UpdatedFileName = "LogCollector_$($CaseNumber)_$($CollectedStartDate)_$($CollectedEndDate).zip"
 
 $UploadUrl = [regex]::Match($UrlUploadDestination, "^.*\.com\/").Value
 $UploadPath = ($RedirectedUploadLocation -split "#")[1]
@@ -191,6 +215,7 @@ try{
     Write-Host "Error uploading to Filecloud" -ForegroundColor Red
     Write-Host "Error --- $($_.Exception.Response.Message) " -ForegroundColor Red
     Write-Host "Error Message --- $($_.Exception.Message) " -ForegroundColor Red
+    $Fs.Close(); $Fs.Dispose()
     Exit
 }
 
