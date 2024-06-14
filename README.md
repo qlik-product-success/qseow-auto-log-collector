@@ -8,7 +8,7 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
 
 ## Command Arguments:
 - **UrlUploadDestination** - Filecloud location to which logs will be uploaded. Must be a valid Filecloud url.
-- **CaseNumber** - The case number found in Salesforce. Value cannot be empty.
+- **CaseNumber** - Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. 
 - **TimeRangeInHours** - Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago.
     This argument should be in accordance to the time interval to which you schedule this script to run in order to avoid unwanted results.
     For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap).
@@ -30,3 +30,16 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
 ```
 .\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341" -Options "eventlog,systeminfo,scriptlogs,allfolders"
 ```
+
+## Schedule the Script to run once a day (or your desired frequency) using the Windows Task Scheduler.
+Steps:
+- 1. Open Task Scheduler. Click on Start and type “Task scheduler” to open it. Or select it in the Start Menu under Windows Administrative Tools (or Windows Tools when using Win 11)
+- 2. Create a Basic Task.
+- 3. Schedule the Task. Select the frequency you want the task to run. Recommended is 1 Day. Remember to update the TimeRangeInHours param supplied to script if choosing a different time interval.
+- 4. Set the Action. Select "Start A Program"
+    - Program/Script: powershell.exe
+    - Arguments: -File "[YOUR PATH TO THE SCRIPT]]\autoLogCollector.ps1" -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341" [additional params needed]
+    - Start In: [add path to the same location the script is in]
+- 5. Select "finish" and open the properties/advanced settings for the task.
+
+
