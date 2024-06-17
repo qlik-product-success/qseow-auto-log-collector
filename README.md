@@ -3,8 +3,7 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
 
 ## Prerequisites to use this script:
 - Qlik Sense Enterprise on Windows must be installed.
-- Repository service must be running (this tool uses the repository service to gather the logs).
-
+- Repository service must be running (this tool uses the repository service to gather the logs). 
 
 ## Command Arguments:
 - **UrlUploadDestination** - Filecloud location to which logs will be uploaded. Must be a valid Filecloud url.
@@ -54,3 +53,21 @@ Steps:
 ![Finish](/images/7.png "Finish")
 
 
+## Additional Configuration Steps
+- In the "General" tab, select "Run whether the user is logged on or not"
+- ![General Properties](/images/8.png "General Properties")
+- In the "Triggers" tab, select the trigger and edit it.
+    - Select "Stop task if it runs longer than 3 days" (or set a different number of days if your configuration is different)
+    - Set the expiration date to **30 days** after the initial date of setup. This means that after 30 days, the task will expire and will no longer continue running. This stop date must be set in order to avoid collecting an undersired amount of logs. Stop date can be set to any desired value, but use caution when setting it.
+    -  ![Edit Trigger](/images/9.png "Edit Trigger")
+    -  ![Set Expiration](/images/10.png "Set Expiration")
+- The "Actions" tab does not need to be modified, unless you wish to provide additional parameters as arguments.
+    -  ![Edit Trigger](/images/11.png "Edit Trigger")
+- The "Conditions" tab may need to be modified, depending on your settings.
+    -  ![Conditions Tab](/images/12.png "Conditions Tab")
+- In the "Settings" tab, select "If the task fails, allow to restart every 5 minutes". 5 minutes is an arbitrary value and can be changed. Allow allow for a maximum of 3 retries. 
+    -  ![Settings Tab](/images/13.png "Settings Tab")
+- Select "OK" to save all the changes. 
+
+### It is important to verify that the script runs as intended, so select "Run" on the right hand side under the "Selected Item" actions to run the script manually. You should see PowerShell start up and the logging from the script show a successful run.
+![Run](/images/14.png "Run")
