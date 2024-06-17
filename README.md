@@ -65,7 +65,7 @@ Steps:
     -  ![Edit Trigger](/images/11.png "Edit Trigger")
 - The "Conditions" tab may need to be modified, depending on your settings.
     -  ![Conditions Tab](/images/12.png "Conditions Tab")
-- In the "Settings" tab, select "If the task fails, allow to restart every 5 minutes". 5 minutes is an arbitrary value and can be changed. Allow allow for a maximum of 3 retries. 
+- In the "Settings" tab, select "If the task fails, allow to restart every 5 minutes". 5 minutes is an arbitrary value and can be changed. Allow for a maximum of 3 retries to avoid being stuck in a "Retry" state if it fails.
     -  ![Settings Tab](/images/13.png "Settings Tab")
 - Select "OK" to save all the changes. 
 
