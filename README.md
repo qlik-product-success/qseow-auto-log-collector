@@ -1,16 +1,21 @@
 # QSE on Windows Auto Log collector
 
-The `autoLogCollector.ps1` script can be used to automate the process of collecting logs from Qlik Sense Enterprise on Windows and uploading them to Qlik Support. This can be useful to streamline reoccurring (daily) log uploads for complex investigations. 
+The `autoLogCollector.ps1` script can automate the process of collecting logs from Qlik Sense Enterprise on Windows and uploading them to Qlik Support. This can streamline recurring (daily) log uploads for complex investigations and ensure that new logs are provided to Qlik Support in a timely manner.  
 
 The log collection is triggered in the same way as when it is run manually from [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm), through the Qlik Sense Repository service (QRS) on the node where the script is executed.  
 The extracted log file ZIP archive is automatically uploaded to the Qlik Support file share path referred to in the related support case. 
 
-This script enables scheduled log collection and automatic upload of Qlik Sense Enterprise logs to Qlik Support.
+By scheduling the script execution through Windows Task Scheduler new logs can be provided to Qlik support at a regular interval. Please agree with Qlik Support on the time period of running automatic log collection, 
 
 ## Prerequisites to use this script
+
+### Server
 - Qlik Sense Enterprise on Windows must be installed.
 - Qlik Sense Repository service must be running at the time of script execution.
 - Powershell running as Administrator
+### Support Case
+- You have an open and active ticket with Qlik Support
+- Qlik support has advised that you use automatic log upload
 
 ## Command Arguments
 ```
@@ -22,7 +27,7 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
 ```
 
 | Attribute                | Required   | Details                                          |
-|---                       | ---        | ---
+| :---                     | :---       | :---
 | `UrlUploadDestination`   | Mandatory  | Upload (FileCloud) URL as provided by Qlik Support on an open support case.  |
 | `CaseNumber`             | Mandatory  | Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. |
 | `TimeRangeInHours`       | Optional   | Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago. <BR/> This argument should be in accordance with the time interval to which you schedule this script to run in order to avoid unwanted results. <BR/> <BR/>For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). <BR/> <BR/> If you set the script to run every 48 hours and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. <BR/> The default value is `25` hours. |
