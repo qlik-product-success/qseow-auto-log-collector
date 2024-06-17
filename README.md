@@ -53,7 +53,7 @@ Collect extensive logs for support case `00168341` from the past 25 hours.
 The collected log ZIP archive will contain Qlik Sense logs from all services, Windows Event logs, server system info.
 The ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
 
-## Confirguration
+## Configuration
 
 ### Install script
 
