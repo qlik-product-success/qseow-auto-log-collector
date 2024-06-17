@@ -17,11 +17,11 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
     The default value for this is 25 hours.
 - **LocalTempContentPath** - The path to which QRS outputs the logs after collecting them. Default value is "C:\ProgramData\Qlik\Sense\Repository\TempContent\".
 - **Options** - Additional Folders to gather upon log collection. Must be a comma separated value ie.options: eventlog,systeminfo,scriptlogs,allfolders
-    To include Windows event logs: eventlog
-    To include system information: systeminfo
-    To include scriptlog files from Qlik folders: scriptlogs
-    To ignore log-folder filter and export all: allfolders
-    https://help.qlik.com/en-US/sense-admin/May2024/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm
+    - To include Windows event logs: eventlog
+    - To include system information: systeminfo
+    - To include scriptlog files from Qlik folders: scriptlogs
+    - To ignore log-folder filter and export all: allfolders
+    - More information: https://help.qlik.com/en-US/sense-admin/May2024/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm
 
 ## Command to Run the script:
 ```
