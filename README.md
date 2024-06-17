@@ -2,24 +2,23 @@
 
 The `autoLogCollector.ps1` script can be used to automate the process of collecting logs from Qlik Sense Enterprise on Windows and uploading them to Qlik Support. This can be useful to streamline reoccurring (daily) log uploads for complex investigations. 
 
-The log collection is triggered in the same way as when it is run manually from (QMC > Log collector)[https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm], through the Qlik Sense Repository service on the node where the script is executed.  
-The extracted log file ZIP archive is automatically uploaded to the Qlik Support file share path referred in the related support case. 
+The log collection is triggered in the same way as when it is run manually from [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm), through the Qlik Sense Repository service on the node where the script is executed.  
+The extracted log file ZIP archive is automatically uploaded to the Qlik Support file share path referred to in the related support case. 
 
 This script enables scheduled log collection and automatic upload of Qlik Sense Enterprise logs to Qlik Support.
 
-## Prerequisites to use this script:
+## Prerequisites to use this script
 - Qlik Sense Enterprise on Windows must be installed.
 - qlik Sense Repository service must be running (this tool uses the repository service to gather the logs). 
 
-## Command Arguments:
+## Command Arguments
 ```
 autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
                      -CaseNumber "CASE_NUMBER" `
                     [-TimeRangeInHours HOURS] `
-                    [-LocalTempContentPath FOLDER_PATH] `
-                    [-Options LOG_OPTIONS] `
+                    [-LocalTempContentPath "FOLDER_PATH"] `
+                    [-Options "LOG_OPTIONS"] `
 ```
-
 
 | Attribute                | Details                                          |
 |---                       | ----       |
@@ -27,14 +26,7 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
 | `CaseNumber`             | Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. |
 | `TimeRangeInHours`       | Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago. <BR/> This argument should be in accordance to the time interval to which you schedule this script to run in order to avoid unwanted results. <BR/> For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). <BR/> If you set the script to run every 48 hours, and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. The default value for this is 25 hours. |
 | `LocalTempContentPath`   | The path to which QRS outputs the logs after collecting them. Default value is `C:\ProgramData\Qlik\Sense\Repository\TempContent\` |
-| `Options`                | Additional Folders to gather upon log collection. Must be a comma-separated value ie. options: `eventlog,systeminfo,scriptlogs,allfolders` |
-
-
-    - To include Windows event logs: eventlog
-    - To include system information: systeminfo
-    - To include scriptlog files from Qlik folders: scriptlogs
-    - To ignore log-folder filter and export all: allfolders
-    - More information: https://help.qlik.com/en-US/sense-admin/May2024/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm
+| `Options`                | Additional Folders to gather upon log collection. Must be a comma-separated value ie. options: `eventlog,systeminfo,scriptlogs,allfolders` <BR/>- To include Windows event logs: eventlog <BR/> - To include system information: systeminfo <BR/> - To include scriptlog files from Qlik folders: scriptlogs  <BR/> - To ignore log-folder filter and export all: allfolders  <BR/>  - More information: https://help.qlik.com/en-US/sense-admin/May2024/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm |
 
 ## Command to Run the script:
 ```
