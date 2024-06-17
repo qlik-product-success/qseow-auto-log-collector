@@ -96,3 +96,6 @@ Steps:
 
 ### It is important to verify that the script runs as intended, so select "Run" on the right hand side under the "Selected Item" actions to run the script manually. You should see PowerShell start up and the logging from the script show a successful run.
 ![Run](/images/14.png "Run")
+
+# License
+This project is provided "AS IS", without any warranty, under the MIT License - see the [LICENSE](./LICENSE) file for details
