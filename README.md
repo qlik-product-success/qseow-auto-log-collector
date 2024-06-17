@@ -57,6 +57,10 @@ The ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
 
 ### Install script
 
+1. Download [autoLogCollector.ps1](https://raw.githubusercontent.com/qlik-product-success/qseow-auto-log-collector/main/autoLogCollector.ps1)
+2. Save `autoLogCollector.ps1` in a folder that is accessible to the system when running a scheduled task. For example under `c:\qseow-auto-log\`.
+3. 
+
 ### Schedule execution
 
 the Script to run once a day (or your desired frequency) using the Windows Task Scheduler.
