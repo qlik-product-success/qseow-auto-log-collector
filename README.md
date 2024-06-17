@@ -34,7 +34,9 @@ Auto Log Collector script for Qlik Sense Enterprise on Windows
 ## Schedule the Script to run once a day (or your desired frequency) using the Windows Task Scheduler.
 Steps:
 - 1. Open Task Scheduler. Click on Start and type “Task scheduler” to open it. Or select it in the Start Menu under Windows Administrative Tools (or Windows Tools when using Win 11)
+![Open Task Scheduler](../images/1.png "Open Task Scheduler")
 - 2. Create a Basic Task.
+![Create a Basic Task](../images/2.png "Create a Basic Task")
 - 3. Schedule the Task. Select the frequency you want the task to run. Recommended is 1 Day. Remember to update the TimeRangeInHours param supplied to script if choosing a different time interval.
 - 4. Set the Action. Select "Start A Program"
     - Program/Script: powershell.exe
