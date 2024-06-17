@@ -30,7 +30,9 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
                            For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). 
                            If you set the script to run every 48 hours, and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. The default value for this is 25 hours. |
 | `LocalTempContentPath`   | The path to which QRS outputs the logs after collecting them. Default value is "C:\ProgramData\Qlik\Sense\Repository\TempContent\".|
-| `Options`                | Additional Folders to gather upon log collection. Must be a comma separated value ie. options: `eventlog,systeminfo,scriptlogs,allfolders`
+| `Options`                | Additional Folders to gather upon log collection. Must be a comma separated value ie. options: `eventlog,systeminfo,scriptlogs,allfolders` |
+
+
     - To include Windows event logs: eventlog
     - To include system information: systeminfo
     - To include scriptlog files from Qlik folders: scriptlogs
