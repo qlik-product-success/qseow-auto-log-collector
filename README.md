@@ -2,7 +2,7 @@
 
 The `autoLogCollector.ps1` script can be used to automate the process of collecting logs from Qlik Sense Enterprise on Windows and uploading them to Qlik Support. This can be useful to streamline reoccurring (daily) log uploads for complex investigations. 
 
-The log collection is triggered in the same way as when it is run manually from [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm), through the Qlik Sense Repository service on the node where the script is executed.  
+The log collection is triggered in the same way as when it is run manually from [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm), through the Qlik Sense Repository service (QRS) on the node where the script is executed.  
 The extracted log file ZIP archive is automatically uploaded to the Qlik Support file share path referred to in the related support case. 
 
 This script enables scheduled log collection and automatic upload of Qlik Sense Enterprise logs to Qlik Support.
@@ -20,13 +20,13 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
                     [-Options "LOG_OPTIONS"] `
 ```
 
-| Attribute                | Details                                          |
-|---                       | ----       |
-| `UrlUploadDestination`   | Filecloud location to which logs will be uploaded. Must be a valid Filecloud url. |
-| `CaseNumber`             | Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. |
-| `TimeRangeInHours`       | Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago. <BR/> This argument should be in accordance to the time interval to which you schedule this script to run in order to avoid unwanted results. <BR/> For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). <BR/> If you set the script to run every 48 hours, and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. The default value for this is 25 hours. |
-| `LocalTempContentPath`   | The path to which QRS outputs the logs after collecting them. Default value is `C:\ProgramData\Qlik\Sense\Repository\TempContent\` |
-| `Options`                | Additional folders to gather upon log collection. Must be a comma-separated value of options:<BR/>`eventlog` to include Windows event logs.<BR/>`systeminfo` to include system information. <BR/>`scriptlogs` to include script log files from Qlik folders. <BR/>`allfolders` to ignore log-folder filter and export all. <BR/> See Qlik Help [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm) for more details. |
+| Attribute                | Required   | Details                                          |
+|---                       | ---        | ---
+| `UrlUploadDestination`   | Mandatory  | Upload (FileCloud) URL as provided by Qlik Support on an open support case.  |
+| `CaseNumber`             | Mandatory  | Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. |
+| `TimeRangeInHours`       | Optional   | Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago. <BR/> This argument should be in accordance with the time interval to which you schedule this script to run in order to avoid unwanted results. <BR/> <BR/>For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). <BR/> <BR/> If you set the script to run every 48 hours and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. <BR/> The default value is `25` hours. |
+| `LocalTempContentPath`   | Optional   | Folder path to local QRS log output after collecting them. <BR/> Default value is `C:\ProgramData\Qlik\Sense\Repository\TempContent\` |
+| `Options`                | Optional   | Additional folders to gather upon log collection. <BR/> Must be a comma-separated value of options:<BR/>`eventlog` to include Windows event logs.<BR/>`systeminfo` to include system information. <BR/>`scriptlogs` to include script log files from Qlik folders. <BR/>`allfolders` to ignore log-folder filter and export all. <BR/> See Qlik Help [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm) for more details. |
 
 ## Command to Run the script:
 ```
