@@ -26,12 +26,7 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
 | `CaseNumber`             | Case number which has been communicated by support or which you find in the case portal in Salesforce. Value cannot be empty. |
 | `TimeRangeInHours`       | Time range for which QRS will fetch logs. For example, if "25" is passed in as an argument, QRS will fetch the logs between now and 25 hours ago. <BR/> This argument should be in accordance to the time interval to which you schedule this script to run in order to avoid unwanted results. <BR/> For example, if you schedule this script to run every 48 hours, then TimeRangeInHours should be 49 (48 hours + 1 to bridge any gap). <BR/> If you set the script to run every 48 hours, and do not provide an argument of 49 hours, then it will default to 25, which means every time the script executes, you'll be missing 24 hours worth of logs. The default value for this is 25 hours. |
 | `LocalTempContentPath`   | The path to which QRS outputs the logs after collecting them. Default value is `C:\ProgramData\Qlik\Sense\Repository\TempContent\` |
-| `Options`                | Additional folders to gather upon log collection. Must be a comma-separated value of options:
-<BR/>`eventlog` to include Windows event logs.
-<BR/>`systeminfo` to include system information. 
-<BR/>`scriptlogs` to include script log files from Qlik folders.
-<BR/>`allfolders` to ignore log-folder filter and export all.
-<BR/> See Qlik Help [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm) for more details. |
+| `Options`                | Additional folders to gather upon log collection. Must be a comma-separated value of options:<BR/>`eventlog` to include Windows event logs.<BR/>`systeminfo` to include system information. <BR/>`scriptlogs` to include script log files from Qlik folders. <BR/>`allfolders` to ignore log-folder filter and export all. <BR/> See Qlik Help [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm) for more details. |
 
 ## Command to Run the script:
 ```
