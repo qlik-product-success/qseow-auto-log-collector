@@ -7,8 +7,7 @@ The extracted log file ZIP archive is automatically uploaded to the Qlik Support
 
 By scheduling the script execution through Windows Task Scheduler new logs can be provided to Qlik support at a regular interval. Please agree with Qlik Support on the time period of running automatic log collection, 
 
-## Prerequisites to use this script
-
+## Prerequisites 
 ### Server
 - Qlik Sense Enterprise on Windows must be installed.
 - Qlik Sense Repository service must be running at the time of script execution.
