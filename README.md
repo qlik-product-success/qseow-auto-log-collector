@@ -9,7 +9,8 @@ This script enables scheduled log collection and automatic upload of Qlik Sense 
 
 ## Prerequisites to use this script
 - Qlik Sense Enterprise on Windows must be installed.
-- qlik Sense Repository service must be running (this tool uses the repository service to gather the logs). 
+- Qlik Sense Repository service must be running at the time of script execution.
+- Powershell running as Administrator
 
 ## Command Arguments
 ```
@@ -28,15 +29,33 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
 | `LocalTempContentPath`   | Optional   | Folder path to local QRS log output after collecting them. <BR/> Default value is `C:\ProgramData\Qlik\Sense\Repository\TempContent\` |
 | `Options`                | Optional   | Additional folders to gather upon log collection. <BR/> Must be a comma-separated value of options:<BR/>`eventlog` to include Windows event logs.<BR/>`systeminfo` to include system information. <BR/>`scriptlogs` to include script log files from Qlik folders. <BR/>`allfolders` to ignore log-folder filter and export all. <BR/> See Qlik Help [QMC > Log collector](https://help.qlik.com/en-US/sense-admin/Subsystems/DeployAdministerQSE/Content/Sense_DeployAdminister/QSEoW/Administer_QSEoW/Managing_QSEoW/log-collector.htm) for more details. |
 
-## Command to Run the script:
+## Examples
+
 ```
-.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341"
-```
-```
-.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341" -Options "eventlog,systeminfo,scriptlogs,allfolders"
+.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" `
+                       -CaseNumber "00168341"
 ```
 
-## Schedule the Script to run once a day (or your desired frequency) using the Windows Task Scheduler.
+Collect standard Qlik Sense logs for support case `00168341` from the past 25 hours. 
+The collected log ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
+
+```
+.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" `
+                       -CaseNumber "00168341" `
+                       -Options "eventlog,systeminfo,allfolders"
+```
+
+Collect extensive logs for support case `00168341` from the past 25 hours. 
+The collected log ZIP archive will contain Qlik Sense logs from all services, Windows Event logs, server system info.
+The ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
+
+## Confirguration
+
+### Install script
+
+### Schedule execution
+
+the Script to run once a day (or your desired frequency) using the Windows Task Scheduler.
 Steps:
 - Open Task Scheduler. Click on Start and type “Task scheduler” to open it. Or select it in the Start Menu under Windows Administrative Tools (or Windows Tools when using Win 11)
   ![Open Task Scheduler](/images/1.png "Open Task Scheduler")
