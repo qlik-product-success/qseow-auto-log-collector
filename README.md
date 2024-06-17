@@ -57,9 +57,15 @@ The ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
 
 ### Install script
 
-1. Download [autoLogCollector.ps1](https://raw.githubusercontent.com/qlik-product-success/qseow-auto-log-collector/main/autoLogCollector.ps1)
+1. Download [autoLogCollector.ps1](https://raw.githubusercontent.com/qlik-product-success/qseow-auto-log-collector/main/autoLogCollector.ps1) and to Qlik Sense central node. 
 2. Save `autoLogCollector.ps1` in a folder that is accessible to the system when running a scheduled task. For example under `c:\qseow-auto-log\`.
-3. 
+3. Get the upload URL and case number from the Qlik Support portal. <BR/> IMPORTANT: you must use the correct URL and matching support case number for the upload to be successful and correctly routed on the Qlik Support side.
+4. Manually test that the script can execute successfully before continuing to automation
+   a. Run PowerShell prompt As Adminstrator
+   b. Navigate to the folder where you saved `autoLogCollector.ps1`
+      ```
+      PS> cd c:\qseow-auto-log\
+      ```
 
 ### Schedule execution
 
