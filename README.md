@@ -36,22 +36,22 @@ autoLogCollector.ps1 -UrlUploadDestination "FILE_CLOUD_URL" `
 ## Examples
 
 ```
-.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" `
-                       -CaseNumber "00168341"
+.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/[SOME_PATH]" `
+                       -CaseNumber "[CASE_NUMER]"
 ```
 
-Collect standard Qlik Sense logs for support case `00168341` from the past 25 hours. 
-The collected log ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
+Collect standard Qlik Sense logs for support case `[CASE_NUMER]` from the past 25 hours. 
+The collected log ZIP archive is uploaded to `https://files.qlik.com/url/[SOME_PATH]`.
 
 ```
-.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" `
-                       -CaseNumber "00168341" `
+.\autoLogCollector.ps1 -UrlUploadDestination "https://files.qlik.com/url/[SOME_PATH]" `
+                       -CaseNumber "[CASE_NUMER]" `
                        -Options "eventlog,systeminfo,allfolders"
 ```
 
-Collect extensive logs for support case `00168341` from the past 25 hours. 
+Collect extensive logs for support case `[CASE_NUMER]` from the past 25 hours. 
 The collected log ZIP archive will contain Qlik Sense logs from all services, Windows Event logs, server system info.
-The ZIP archive is uploaded to `https://files.qlik.com/url/qahacjvapgdfwuw6`.
+The ZIP archive is uploaded to `https://files.qlik.com/url/[SOME_PATH]`.
 
 ## Configuration
 
@@ -84,7 +84,7 @@ Steps:
   ![Set the action](/images/5.png "Set the action")
 - Set the arguments on "Start a Program"
     - Program/Script: powershell.exe
-    - Arguments example: -File "[YOUR PATH TO THE SCRIPT]\autoLogCollector.ps1" -UrlUploadDestination "https://files.qlik.com/url/qahacjvapgdfwuw6" -CaseNumber "00168341" [and any additional params you want to set]
+    - Arguments example: -File "[YOUR PATH TO THE SCRIPT]\autoLogCollector.ps1" -UrlUploadDestination "https://files.qlik.com/url/[SOME_PATH]" -CaseNumber "[CASE_NUMER]" [and any additional params you want to set]
     - Start In: [add path to the same location the script is in]. Any output files will be placed in this location.
 ![Set arguments](/images/6.png "Set the action")
 
